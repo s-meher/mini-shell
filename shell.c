@@ -1,8 +1,12 @@
-/* 
- * tsh - A tiny shell program with job control
- * 
- * <Shree Meher, smeher@hawk.iit.edu, s-meher>
+/*
+ * mini-shell
+ * A Unix-style shell implemented in C with support for
+ * foreground/background execution, signal handling,
+ * and basic job control.
+ *
+ * Author: Shree Meher
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -37,7 +41,7 @@
 
 /* Global variables */
 extern char **environ;      /* defined in libc */
-char prompt[] = "tsh> ";    /* command line prompt (DO NOT CHANGE) */
+char prompt[] = "shell> ";  
 int verbose = 0;            /* if true, print additional output */
 int nextjid = 1;            /* next job ID to allocate */
 char sbuf[MAXLINE];         /* for composing sprintf messages */
@@ -183,7 +187,7 @@ void eval(char *cmdline)
             sigprocmask(SIG_SETMASK, &prev_one, NULL);
             setpgid(0, 0);
             if (execv(argv[0], argv) < 0) {
-                printf("%s: Command not found\n", argv[0]);//changed to match trace14, removed period
+                printf("%s: Command not found\n", argv[0]);
                 exit(0);
             }
         }
@@ -313,14 +317,13 @@ void do_bgfg(char **argv)
       if(id[0] == '%'){
          printf("%s: No such job\n", id);
       }else{
-         printf("(%d): No such process\n", atoi(id));//trace14: Non-existent PIDs or JIDs → "(pid): No such process" or "%jid: No such job"
+         printf("(%d): No such process\n", atoi(id));
       }
       return;
   } 
-    //TRACE14: Handles error messages for invalid or missing arguments to fg/bg commands. 
+    //Handles error messages for invalid or missing arguments to fg/bg commands. 
     
     // This line ensures all stopped processes in the same process group are resumed.
-    // Essential for passing trace13, which requires 'fg %1' to restart the entire job group.
     pid_t pgid = getpgid(job->pid);
     
     if (pgid > 0) {
@@ -329,14 +332,14 @@ void do_bgfg(char **argv)
 
     if (!strcmp(argv[0], "fg")) {
         job->state = FG;
-        //printf("%s", job->cmdline); //required for trace13
-        waitfg(job->pid); //trace15: Waits for job in foreground; suppresses extra output (no cmdline print)
+        //printf("%s", job->cmdline); 
+        waitfg(job->pid); //Waits for job in foreground; suppresses extra output (no cmdline print)
     } else if (!strcmp(argv[0], "bg")){
       job->state = BG;
-      printf("[%d] (%d) %s", job->jid, job->pid, job->cmdline); // trace15: bg should print job info
+      printf("[%d] (%d) %s", job->jid, job->pid, job->cmdline); // bg should print job info
     }
 }
-// trace15: Ensures correct fg/bg behavior:
+// Ensures correct fg/bg behavior:
 // - fg waits silently (no extra command line print like ./myspin 3 &)
 // - bg resumes and prints job info in expected format.
 
@@ -375,14 +378,14 @@ void sigchld_handler(int sig)
              deletejob(jobs, pid);
           }
           else if (WIFSIGNALED(status)) {
-              // TRACE16: Detect termination by signal and print message
+              // Detect termination by signal and print message
                printf("Job [%d] (%d) terminated by signal %d\n", jid, pid, WTERMSIG(status));
                deletejob(jobs, pid);
           }else if (WIFSTOPPED(status)) {
                  struct job_t *job = getjobpid(jobs, pid);
                  if (job) {
                     job->state = ST;
-                    // TRACE10, TRACE13, TRACE15: Print stopped message correctly
+                    // Print stopped message correctly
                     printf("Job [%d] (%d) stopped by signal %d\n", jid, pid, WSTOPSIG(status));
                  }
           }
@@ -398,13 +401,13 @@ void sigchld_handler(int sig)
  */
 
 void sigint_handler(int sig) {
-// TRACE11 & TRACE12: Forward signals to foreground process group 
+// Forward signals to foreground process group 
    pid_t fg_pid = fgpid(jobs);
     if (fg_pid != 0) {
         kill(-fg_pid, SIGINT);  //tarce11:  send to the entire process group
     }
 }
-// TRACE16: This handler ensures the shell forwards SIGINT to the foreground process group,
+// This handler ensures the shell forwards SIGINT to the foreground process group,
 // including when sent from an external process like ./myint
 
 
@@ -415,13 +418,13 @@ void sigint_handler(int sig) {
  */
 void sigtstp_handler(int sig) 
 {
-// TRACE11 & TRACE12: Forward signals to foreground process group
+// Forward signals to foreground process group
   pid_t fg_pid = fgpid(jobs);
     if (fg_pid != 0) {
-        kill(-fg_pid, SIGTSTP);  //trace12:  send to the whole process group
+        kill(-fg_pid, SIGTSTP);  //send to the whole process group
     }
 }
-// TRACE16: This handler ensures the shell forwards SIGTSTP to the foreground process group,
+// This handler ensures the shell forwards SIGTSTP to the foreground process group,
 // including when sent from an external process like ./mystop
 
 
@@ -635,8 +638,7 @@ handler_t *Signal(int signum, handler_t *handler)
 }
 
 /*
- * sigquit_handler - The driver program can gracefully terminate the
- *    child shell by sending it a SIGQUIT signal.
+ * sigquit_handler - Cleanly terminate the shell on SIGQUIT.
  */
 void sigquit_handler(int sig) 
 {
