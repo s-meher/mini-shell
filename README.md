@@ -72,4 +72,4 @@ This project is a compact showcase of systems programming fundamentals. It is no
 
 - [GitHub](https://github.com/s-meher)
 - [LinkedIn](https://www.linkedin.com/in/shree-meher/)
-- [Portfolio](https://shree-portfolio-jt9xzoadm-sm3.vercel.app/)
+- [Portfolio](https://shree-portfolio-virid.vercel.app/)
